@@ -1,0 +1,18 @@
+# WIP with python=3.8, Rhino 7 on Windows10
+
+
+Installation:
+
+pip install --user rhinoinside
+
+https://github.com/mcneel/rhino.inside-cpython
+
+
+
+
+------------------------------
+
+Hints/Helpers:
+
+Param components:
+https://www.grasshopper3d.com/forum/topics/clearvalues-of-gh-param 
