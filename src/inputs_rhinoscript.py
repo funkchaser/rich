@@ -1,5 +1,6 @@
 """
-Run this file in Rhino Python Editor
+Run this file in Rhino Python Editor.
+The Grasshopper file must be the first active file. (Close all other Grasshopper files to avoid confusion.)
 """
 
 import os
@@ -20,24 +21,23 @@ docServer = Grasshopper.GH_InstanceServer.DocumentServer
 doc = docServer[0] # first opened document
 
 
-def FindBatteryByNickname(docObjects, name):
+def find_component_by_nickname(docObjects, name):
     if docObjects is None: return None
 
     for obj in docObjects:
         attr = obj.Attributes
         
         if attr.PathName == name:
-            print(type(obj))
             return obj
     raise Exception(name + " was not found in document")
 
-def set_value(battery, val):
-    battery.Script_ClearPersistentData()
-    battery.AddPersistentData(val)
-    battery.ExpireSolution(True) 
+def set_value(component, val):
+    component.Script_ClearPersistentData()
+    component.AddPersistentData(val)
+    component.ExpireSolution(True) 
 
-input_num = FindBatteryByNickname(doc.Objects, 'Input_Num')
-output = FindBatteryByNickname(doc.Objects, 'Output_Data')
+input_num = find_component_by_nickname(doc.Objects, 'Input_Num')
+output = find_component_by_nickname(doc.Objects, 'Output_Data')
 
-set_value(input_num, 77) #sets to 0=generator mode
-print "retrieved:", output.VolatileData[0][0].Value
+set_value(input_num, '-1')
+print "Collected Data:", output.VolatileData[0][0].Value

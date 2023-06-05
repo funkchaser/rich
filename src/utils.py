@@ -81,41 +81,58 @@ def runcount(ghdoc, component_nickname):
             print(f"  gh_component run {n:>3} times: '{component_nickname}'")
 
 def set_input(ghdoc, component_nickname, parameter_nickname, value, ghtype):
-    assert not isinstance(value, list), "Value parameter cannot be a list. Please provide a single value"
+    """
+    value: single item or a 1D list
+    """
+
+    if value==[] or value is None: return # None or []
+
     obj = find_component_by_nickname(ghdoc,component_nickname)
     if not obj: 
         print("Could not set value.")
         return
 
     component = Grasshopper.Kernel.IGH_Component(obj)
-    for param in component.Params.Input:
-        if param.NickName == parameter_nickname:
-            param.VolatileData.Clear()
-            param.AddVolatileData(GH_Path(0), 0, ghtype(value))
-            print(f"'{obj.NickName}' -> input '{param.NickName}' set to {param.VolatileData[0][0]}")
+    param = find_inputparam_by_nickname(component, parameter_nickname)
+    param.VolatileData.Clear()
+    if not isinstance(value, list):
+        param.AddVolatileData(GH_Path(0), 0, ghtype(value))
+        print(f"'{obj.NickName}' -> input '{param.NickName}' set to {param.VolatileData[0][0]}")
+    else:
+        for i,v in enumerate(value):
+            param.AddVolatileData(GH_Path(0), i, ghtype(v))
+        print(f"'{obj.NickName}' -> value set to {[cast(param.VolatileData[0][i])[1] for i in range(len(param.VolatileData[0]))]}") 
+    
     component.ExpireSolution(True)
 
-
 def set_value(ghdoc, component_nickname, value):
+    """
+    value: single item or a 1D list
+    """
     obj = find_component_by_nickname(ghdoc, component_nickname)
 
     if not obj: 
         print("Could not set value.")
         return
-    print(obj, type(obj))
+
     component = Grasshopper.Kernel.IGH_Param(obj)
     ghtype = TYPES[component.TypeName] 
-    component.AddVolatileData(GH_Path(0),0, ghtype(value))
-
-    print(f"'{obj.NickName}' -> value set to {component.VolatileData[0][0]}")
-    # DO NOT component.ExpireSolution(True)! It will erase the volatile data!
+    if not isinstance(value,list):
+        component.AddVolatileData(GH_Path(0),0, ghtype(value))
+        print(f"'{obj.NickName}' -> value set to {component.VolatileData[0][0]}")
+    else:
+        for i,v in enumerate(value):
+            component.AddVolatileData(GH_Path(0),i, ghtype(v))
+        print(f"'{obj.NickName}' -> value set to {[cast(component.VolatileData[0][i])[1] for i in range(len(component.VolatileData[0]))]}")
+    
+    # DO NOT: component.ExpireSolution(True)! It will erase the volatile data!
 
 def set_slider(ghdoc, component_nickname, value):
     raise NotImplementedError("Use set_value() method instead")
 
 
 
-def get_param_component(ghdoc, component_nickname):
+def get_values(ghdoc, component_nickname):
     obj = find_component_by_nickname(ghdoc, component_nickname)
     if not obj: 
         print("Could not set value.")
@@ -125,6 +142,15 @@ def get_param_component(ghdoc, component_nickname):
     param = Grasshopper.Kernel.IGH_Param(obj)
     param.CollectData()
     param.ComputeData()
+
+
+    for path in param.VolatileData.Paths:
+        # TODO: read data with structure
+        # print(param.VolatileData.DataDescription(True,True)) give just a string description, no objects
+        # path is an object, how to use it to access data?
+        # doesn't work: param.VolatileData.Branch seems not available despite API
+        pass
+
     for item in param.VolatileData.AllData(True):
         success, cast_item = cast(item)
         values.append(cast_item)
@@ -158,7 +184,19 @@ def find_component_by_nickname(ghdoc, component_nickname):
         return
     return found[0]
 
+def find_inputparam_by_nickname(component, parameter_nickname):
+    found = []
+    for param in component.Params.Input:
+        if param.NickName == parameter_nickname:
+            found.append(param)
 
+    if not found:
+        print(f"Ghcomponent {component.NickName} has no input with a nickname {parameter_nickname}.")
+        return
+    if len(found)>1:
+        print(f"Ghcomponent {component.NickName} has {len(found)} inputs with the nickname {parameter_nickname} - will return None.")
+        return
+    return found[0]
 
 
 def new_solution(ghdoc):
