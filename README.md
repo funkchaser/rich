@@ -12,6 +12,10 @@ Requires [rhinoinside](https://github.com/mcneel/rhino.inside-cpython ):
 pip install --user rhinoinside
 ```
 
+## Contents
+The `src` folder contains:
+* a module with helper functions `util.py`
+* three demos/examples (_addition_, _delay_, _inputs_) consisting of a python file (to be run in cpython, e.g. in terminal, VSCode or another IDE) and a corresponding Grasshopper file (does not have to be open). Additionally,  `inputs_rhinoscript.py` shows an alternative way of interacting with a Grasshopper file from RhinoPythonEditor.   
 
 ## Features & Comments
 * Finds components and inputs by nickname, in a Grasshopper file given by the path.
